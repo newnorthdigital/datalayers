@@ -1,0 +1,280 @@
+<script>
+  	window.addEventListener('load', function(){
+    
+      /**********************
+      * GTM DATALAYER 
+      ***********************/
+
+      {#
+        Add data attributes to addtocart buttons on:
+         - snippets/list-products.rain
+         - snippets/products.rain
+         - snippets/products-noll.rain
+      #}
+
+      /* DATALAYER: initialize */
+      window.dataLayer = window.dataLayer || [];
+
+      /* DATALAYER: Log State */
+      var logState = {
+          {% if page.account %}
+          'user_id'        : "{{page.account.id}}",
+          'customer_email' : "{{page.account.email}}",
+          'log_state'      : "Logged In",
+          'customer_info'  : {
+              'first_name'   : "{{page.account.firstname}}",
+              'last_name'    : "{{page.account.lastname}}"
+          },
+          {% else %}
+          'log_state' : "Logged Out",
+          {% endif %}
+          'event'         : 'logState'
+      }
+      window.dataLayer.push(logState);
+
+      {% if page.status == "404" %}
+        /* DATALAYER: 404 Pages */
+        window.dataLayer.push({
+            'event':'404',
+            'page': window.location.pathname 
+        });
+      {% endif %}
+
+      {% if template == 'pages/product.rain' %}
+
+        /* DATALAYER: Product View (Product Detail Page) */
+        var ecommerce = {
+            'currency': 'EUR',
+            'value': {{ product.price.price }},
+            'items': [{
+                'id'              : '{{ product.id }}',
+              	'item_id'         : '{{ product.vid }}',
+              	'product_id'      : '{{ product.vid }}',            
+                'item_name'       : '{{ product.title }}',
+                'price'           : {{ product.price.price }},
+                'item_brand'      : '{{ product.brand.title }}',
+                'item_category'   : '{% for category in product.categories | limit(1) %}{{ category.title }}{% endfor %}',
+                'item_list_name'  : 'PDP Main Product',
+                'quantity'        : parseInt(document.querySelector('#product #product_configure_form input[name="quantity"]').value),
+                'google_business_vertical': 'retail'
+            }]
+        };
+
+        window.dataLayer.push({
+            'event': 'view_item',
+             ecommerce
+        });
+
+        /* DATALAYER: Add to cart */
+        var el = document.querySelectorAll('#product #product_configure_form .addtocart');
+        el && el.forEach(trigger => trigger.addEventListener('click', function(e){
+          window.dataLayer.push({                    
+              'event': 'add_to_cart',
+              ecommerce
+          });
+      	}));
+
+      {% endif %}
+
+      {% if template == 'pages/collection.rain' %}
+
+        /* DATALAYER: Product View (Collection Page) */
+
+        {% if page.search %}
+
+          {% set list_name = "Search Results" %}
+
+        {% else %}
+
+          {% set list_name = collection.title %}
+
+        {% endif %}
+
+        var ecommerce = {
+          'item_list_name': '{{ collection.title }}',
+          'items': [
+              {% for product in collection.products %}{
+                'id'              : '{{ product.id }}',
+              	'item_id'         : '{{ product.vid }}',
+              	'product_id'      : '{{ product.vid }}',             
+                'item_name'       : '{{ product.title }}',
+                'price'           : {{ product.price.price }},
+                'item_brand'      : '{{ product.brand.title }}',
+                'item_category'   : '{{ collection.title }}',
+                'item_list_name'  : '{{ list_name }}',
+                'quantity'        : 1,
+                'google_business_vertical': 'retail'
+              {% if not loop.last %}
+              },
+              {% else %}
+              }
+              {% endif %}
+              {% endfor %}
+            ]
+        };
+
+        window.dataLayer.push({
+            'productList' : '{{ collection.title }}',
+            'event'       : 'view_item_list',
+            ecommerce
+        });
+
+        /* DATALAYER: Add to cart */
+        var el = document.querySelectorAll('.product .addtocart:not(.hidden)');
+        el && el.forEach(productItem => productItem.addEventListener('click', function(e){
+            var ecommerce = {
+                'currency': 'EUR',
+                'value': parseFloat(this.getAttribute('data-price')),
+                'items': [{
+                    'id'              : this.getAttribute('data-gid'),
+              			'item_id'         : this.getAttribute('data-id'),
+              			'product_id'      : this.getAttribute('data-pid'),            
+                    'item_name'       : this.getAttribute('data-title'),
+                    'price'           : parseFloat(this.getAttribute('data-price')),
+                    'item_brand'      : this.getAttribute('data-brand'),
+                    'item_category'   : '{{collection.title}}',
+                    'item_list_name'  : '{{collection.title}}',
+                    'quantity'        : 1,
+                    'google_business_vertical': 'retail'
+                }]
+            };
+
+            window.dataLayer.push({                    
+                'event': 'add_to_cart',
+                ecommerce
+            });
+        }));
+
+      {% endif %}
+
+      {% if template == 'pages/index.rain' %}
+
+        /* DATALAYER: Add to cart */
+        var el = document.querySelectorAll('.product .addtocart:not(.hidden)');
+        el && el.forEach(productItem => productItem.addEventListener('click', function(e){
+            var ecommerce = {
+                'currency': 'EUR',
+                'value': parseFloat(this.getAttribute('data-price')),
+                'items': [{
+                    'id'              : this.getAttribute('data-gid'),
+              			'item_id'         : this.getAttribute('data-id'),
+              			'product_id'      : this.getAttribute('data-pid'),
+                    'item_name'       : this.getAttribute('data-title'),
+                    'price'           : parseFloat(this.getAttribute('data-price')),
+                    'item_brand'      : this.getAttribute('data-brand'),
+                    'item_list_name'  : 'Homepage',
+                    'quantity'        : 1,
+                    'google_business_vertical': 'retail'
+                }]
+            };
+
+            window.dataLayer.push({                    
+                'event': 'add_to_cart',
+                ecommerce
+            });
+        }));
+
+      {% endif %} 
+
+      {% if template == 'pages/cart.rain' %}
+
+        /* DATALAYER: Cart View (page) */ 
+
+        {% if cart.products %}
+
+          {% if cart.products | length > 0 %}
+
+            var ecommerce = {
+                'currency': 'EUR',
+                'value': {{ page.cart.total.price }},
+                'items': [
+                  {% for product in cart.products %}{
+                    {% set productPrice = product.price.price_incl / product.quantity %}
+                    'id'              : '{{ product.id }}',
+              			'item_id'         : '{{ product.vid }}',
+              			'product_id'      : '{{ product.vid }}',
+                    'item_name'       : '{{ product.title }}',
+                    'price'           : {{ productPrice }},
+                    'item_brand'      : '{{ product.brand.title }}',
+                    'item_category'   : '{% for category in product.categories | limit(1) %}{{ category.title }}{% endfor %}',
+                    'item_list_name'  : 'Cart page',
+                    'quantity'        : {{ product.quantity }},
+                    'google_business_vertical': 'retail'
+                  {% if not loop.last %}
+                  },
+                  {% else %}
+                  }
+                  {% endif %}
+                  {% endfor %}
+                ],   
+            };
+
+            window.dataLayer.push({
+                'event': 'view_cart',
+                ecommerce
+            });
+          {% endif %}
+
+        {% endif %}
+
+      {% endif %}
+      
+      {% if 'checkouts' in template or template in ['pages/thankyou.rain'] %}
+      	var ecommerce = {
+          'transaction_id': '{{ order.information.id }}',
+          'value': {{ order.information.price_incl | number_format(2, '.', '.') }},
+          'shipping': {{ order.information.shipping_price | number_format(2, '.', '.') }},
+          'currency': 'EUR',
+          'items': [
+            {% for product in order.products %}
+              {
+                'id': '{{ product.id }}',
+                'item_id': '{{ product.variant_id }}',
+                'product_id': '{{ product.variant_id }}',  		 
+                'item_name': '{{ product.title }}',
+                'price': {{ product.base_price_incl }},
+                'item_brand': '{{ product.brand.title }}',
+                'item_list_name': 'Thank you page',
+                'quantity': {{ product.quantity }},
+                'discount': {{ product.discount_incl | number_format(2, '.', '.') }},
+                'google_business_vertical': 'retail'
+              {% if not loop.last %}
+              },
+              {% else %}
+              }
+              {% endif %}
+            {% endfor %}
+          ],
+        };
+				/* Google Ads Enhanced Conversions */
+
+        var enhanced_conversion_data = {
+          "first_name": "{{ order.customer.firstname }}",
+          "last_name": "{{ order.customer.lastname }}",
+          "home_address": {
+            "street": "{{ order.billing.streetname }}",
+            "city": "{{ order.billing.city }}",
+            "region": "{{ order.billing.region }}",
+            "postal_code": "{{ order.billing.zipcode }}",
+            "country": "{{ order.billing.country_code }}"
+          }
+        };
+        {% if order.customer.email %}
+          enhanced_conversion_data.email = "{{ order.customer.email }}";
+        {% endif %}
+        {% if order.customer.phone %}
+          enhanced_conversion_data.phone_number = "{{ order.customer.phone | replace({' ': ''}) }}";
+        {% endif %}
+
+        window.dataLayer.push({
+          'event': 'purchase',
+          ecommerce,
+          enhanced_conversion_data,
+          'ecomm_prodid': [{% for product in order.products %}'{{ product.id }}'{% if not loop.last %},{% endif %}{% endfor %}],
+          'ecomm_prodid_adwords': [{% for product in order.products %}'{{ product.id }}'{% if not loop.last %},{% endif %}{% endfor %}],
+          'ecomm_pagetype': "purchase",
+          'ecomm_totalvalue': {{ order.information.price_incl | number_format(2, '.', '.') }}
+        });
+      {% endif %}
+    });
+</script>
