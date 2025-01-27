@@ -1,0 +1,540 @@
+<html>
+ <head>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(
+  window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+  <!-- End Google Tag Manager -->
+
+  window.addEventListener('load', function(){
+
+     const page = '{{page.type}}';
+  
+     /**********************
+     * DATALAYER EVENTS 
+     * 
+     * log_state 
+     * 404 
+     * submit_form
+     * register_account
+     * view_item
+     * add_to_cart
+     * view_cart
+     * view_item_list
+     * begin_checkout
+     * add_shipping_info
+     * add_payment_info
+     * purchase
+     ***********************/
+     
+     /**********************
+     * Event: log_state.
+     * Description: Siginifies if a user is logged in along with available user paramaters.
+     * Type: Custom event.
+     * Trigger: On all pages load.
+     ***********************/
+
+     var logState = {
+      {% if user.state == 'loggedin' %}
+        'user_id'         : '{{user.account.id}}',
+        'customer_email'  : '{{user.account.email}}',
+        'log_state'       : 'logged_in',
+        'log_country'     : '{{ request.locale.iso_code}}',
+        'user_data'   : {
+          'first_name'  : '{{user.first_name}}',
+          'last_name'   : '{{user.last_name}}',
+          'address1'    : '{{user.address1}}',
+          'address2'    : '{{user.address2}}',
+          'street'      : '{{user.street}}',
+          'city'        : '{{user.city}}',
+          'zip'         : '{{user.zip}}',
+          'country'     : '{{user.country}}',
+          'phone'       : '{{user.phone}}',
+          'total_orders': {{user.orders_count}},
+          'total_spent' : {{user.total_spent}}
+        },
+      {% else %}
+        'log_state'  : 'logged_out',
+        'log_country': '{{ request.locale.iso_code}}',
+      {% endif %}
+    }
+
+    window.dataLayer.push({
+       'event': 'log_state',
+       logState
+    });
+
+    /**********************
+    * Event: 404.
+    * Description: Signifies that a URL has generated a 404 response.
+    * Type: Custom event.
+    * Trigger: On 404 response.
+    ***********************/
+
+    if(page == '404'){
+      window.dataLayer.push({
+        'event':'404',
+        'page': window.location.pathname 
+      });
+    }
+
+    /**********************
+    * Event: submit_form
+    * Description: Signifies that a user has submitted a form.
+    * Type: Custom GA4 event.
+    * Trigger: On succesful form submit.
+    ***********************/
+
+    if(onSubmit(form)){
+       window.dataLayer.push({                    
+         'event': 'submit_form',
+         'form_id': formId,
+         'form_title': formTitle
+       });
+    }
+
+    /**********************
+    * Event: register_account
+    * Description: Signifies that a user has registered for an account.
+    * Type: Custom GA4 event.
+    * Trigger: On succesful account registration submit.
+    ***********************/
+
+    if(onSubmit(registrationForm)){
+       window.dataLayer.push({                    
+         'event': 'register_account',
+         'user_id'         : '{{user.account.id}}',
+         'customer_email'  : '{{user.account.email}}',
+         'user_data'   : {
+            'first_name'  : '{{user.first_name}}',
+            'last_name'   : '{{user.last_name}}',
+            'address1'    : '{{user.address1}}',
+            'address2'    : '{{user.address2}}',
+            'street'      : '{{user.street}}',
+            'city'        : '{{user.city}}',
+            'zip'         : '{{user.zip}}',
+            'country'     : '{{user.country}}',
+            'phone'       : '{{user.phone}}'
+          }
+       });
+    }
+
+    /**********************
+    * Event: view_item.
+    * Description: Signifies that a product was shown to the user.
+    * Type: Recommended GA4 event.
+    * Tigger: On product page load.
+    ***********************/
+
+    if(page == 'product'){
+      var ecommerce = {
+        'currency': '{{shop.currency.iso_code}}',
+        'value'   : {{product.price}},
+        'items'   : [{
+          'item_id'       : '{{product.id}}',
+          'id'            : '{{product.id}}',
+          'item_variant'  : '{{product.variant.id}}',
+          'item_name'     : '{{product.title}}',
+          'price'         : {{product.price}},
+          'quantity'      : 1,
+          'item_list_name': 'PDP',
+          'item_brand'    : '{{product.brand}}',
+          'item_category' : '{{product.category}}',
+          'google_business_vertical': 'retail'
+        }]
+      };
+
+      window.dataLayer.push({
+        'event': 'view_item',
+        'ecommerce': ecommerce
+      });
+     }
+
+     /**********************
+     * Event: add_to_cart
+     * Description: Signifies that a user has added a product to cart.
+     * Type: Recommended GA4 event.
+     * Trigger: On succesful add to cart or add to cart button/cart increment quantity click.
+     ***********************/
+
+     if(onSubmit(addToCart)){
+       var ecommerce = {
+        'currency': '{{shop.currency.iso_code}}',
+        'value'   : {{product.price}},
+        'items'   : [{
+          'item_id'       : '{{product.id}}',
+          'id'            : '{{product.id}}',
+          'item_variant'  : '{{product.variant.id}}',
+          'item_name'     : '{{product.title}}',
+          'price'         : {{product.price}},
+          'quantity'      : 1,
+          'item_list_name': 'PDP',
+          'item_brand'    : '{{product.brand}}',
+          'item_category' : '{{product.category}}',
+          'google_business_vertical': 'retail'
+        }]
+       };
+       
+       window.dataLayer.push({                    
+          'event': 'add_to_cart',
+          'ecommerce': ecommerce
+        });
+      }
+      
+      // Alternative: on add to cart button and cart increment click. 
+      // Can be difficult with quick add to carts from other pages.
+      var el = document.querySelector(addToCartSelector);
+      el && el.addEventListener('click',function(e){
+        window.dataLayer.push({                    
+          'event': 'add_to_cart',
+          'ecommerce': ecommerce
+        });
+      });
+
+     /**********************
+     * Event: remove_from_cart
+     * Description: Signifies that a user has removed a product from cart.
+     * Type: Recommended GA4 event.
+     * Trigger: On succesful remove from cart and cart decrement
+     * Alternative trigger: On remove from cart/cart decrement quantity click.
+     ***********************/
+
+     if(onSubmit(removeFromCart)){
+       var ecommerce = {
+        'currency': '{{shop.currency.iso_code}}',
+        'value'   : {{product.price}},
+        'items'   : [{
+          'item_id'       : '{{product.id}}',
+          'id'            : '{{product.id}}',
+          'item_variant'  : '{{product.variant.id}}',
+          'item_name'     : '{{product.title}}',
+          'price'         : {{product.price}},
+          'quantity'      : 1,
+          'item_list_name': 'PDP',
+          'item_brand'    : '{{product.brand}}',
+          'item_category' : '{{product.category}}',
+          'google_business_vertical': 'retail'
+        }]
+       };
+       
+       window.dataLayer.push({                    
+          'event': 'remove_from_cart',
+          'ecommerce': ecommerce
+        });
+      }
+      
+      // Alternative: on remove from cart button and cart decrement click.
+      var el = document.querySelector(removeFromCartSelector);
+      el && el.addEventListener('click',function(e){
+        window.dataLayer.push({                    
+          'event': 'remove_from_cart',
+          'ecommerce': ecommerce
+        });
+      });
+
+     /**********************
+     * Event: view_cart.
+     * Description: Signifies that a user viewed their cart.
+     * Type: Recommended GA4 event.
+     * Tigger: On cart page load.
+     * Remark: In case your site features a mini cart, also trigger on mini cart open.
+     ***********************/
+        
+     if(page == 'cart'){
+       var ecommerce = {
+        'currency': '{{shop.currency.iso_code}}',
+        'value'   : {{product.price}},
+        'items'   : [
+	 {% for product in cart %}{
+            'item_id'       : '{{product.id}}',
+            'id'            : '{{product.id}}',
+            'item_variant'  : '{{product.variant.id}}',
+            'item_name'     : '{{product.title}}',
+            'price'         : {{product.price}},
+            'quantity'      : 1,
+            'item_list_name': 'Cart',
+            'item_brand'    : '{{product.brand}}',
+            'item_category' : '{{product.category}}',
+            'google_business_vertical': 'retail'
+   }{% if not loop.last %},{% endif %}
+	  {% endfor %}
+         }]
+       };
+
+       window.dataLayer.push({
+        'event': 'view_cart',
+        'ecommerce': ecommerce
+       });
+     }
+
+     /**********************
+     * Event: view_item_list.
+     * Description: Signifies that a user viewed a category page.
+     * Type: Recommended GA4 event.
+     * Tigger: On category page load.
+     * Remark: Decide whether to take pagination into account.
+     ***********************/
+
+     if(page == 'product_category'){
+        var ecommerce = {
+           'item_list_name': '{{category.name}} - {{category.page_number}}',
+           'items'         : [
+	     {% for product in category %}{
+               'item_id'      : '{{product.id}}',
+               'id'           : '{{product.id}}',
+               'item_variant' : '{{product.variant.id}}',
+               'item_name'    : '{{product.title}}',
+               'price'        : {{product.price}},
+               'quantity'     : 1,
+               'item_brand'   : '{{product.brand}}',
+               'item_category': '{{product.category}}',
+               'google_business_vertical': 'retail'
+     }{% if not loop.last %},{% endif %}
+	     {% endfor %}
+            ]
+        };
+
+        window.dataLayer.push({
+          'event': 'view_item_list',
+          'ecommerce': ecommerce
+        });
+     }
+
+     /**********************
+     * Event: begin_checkout.
+     * Description: Signifies that a user has started the checkout process.
+     * Type: Recommended GA4 event.
+     * Tigger: On checkout page load.
+     ***********************/
+
+     if(page == 'checkout'){
+        var ecommerce = {
+          'value': {{order.value}},
+          'currency': '{{shop.currency.iso_code}}',
+          'items': [
+            {% for product in order.products %}{
+              'item_id'      : '{{product.id}}',
+              'id'           : '{{product.id}}',
+              'item_variant' : '{{product.variant.id}}',              
+              'item_name'    : '{{product.title}}',
+              'price'        : {{product.price}},
+              'quantity'     : {{product.quantity}},
+              'item_brand'   : '{{product.brand}}',
+              'item_category': '{{product.category}}',
+              'discount'     : {{product.discount}},
+              'google_business_vertical': 'retail'
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        };
+
+        window.dataLayer.push({
+          'event': 'begin_checkout',
+          'ecommerce': ecommerce
+        });
+     }
+
+     /**********************
+     * Event: add_shipping_info.
+     * Description: Signifies that a user has submitted shipping information.
+     * Type: Recommended GA4 event.
+     * Tigger: On checkout shipping page load or on shipping details submission.
+     * Alternative trigger: On shipping information page view (in case of a multi page checkout).
+     ***********************/
+
+     if(onSubmit(shippingDetails)){
+        var ecommerce = {
+          'value': {{order.value}},
+          'currency': '{{shop.currency.iso_code}}',
+          {% if order.coupon %}
+          'coupon': {{ order.coupon }},
+          {% endif %}
+          'items': [
+            {% for product in order.products %}{
+              'item_id'      : '{{product.id}}',
+              'id'           : '{{product.id}}',
+              'item_variant' : '{{product.variant.id}}',              
+              'item_name'    : '{{product.title}}',
+              'price'        : {{product.price}},
+              'quantity'     : {{product.quantity}},
+              'item_brand'   : '{{product.brand}}',
+              'item_category': '{{product.category}}',
+              'discount'     : {{product.discount}},
+              'google_business_vertical': 'retail'
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        };
+
+        window.dataLayer.push({
+          'event': 'add_shipping_info',
+          'ecommerce': ecommerce
+        });
+     }
+
+     /**********************
+     * Event: add_payment_info.
+     * Description: Signifies that a user has submitted payment information.
+     * Type: Recommended GA4 event.
+     * Tigger: On payment info submission.
+     * Alternative trigger: On payment information page view (in case of a multi page checkout).
+     ***********************/
+
+     if(page == 'payment' || onSubmit(paymentInfo)){
+        var ecommerce = {
+          'value': {{order.value}},
+          'currency': '{{shop.currency.iso_code}}',
+          {% if order.coupon %}
+          'coupon': {{ order.coupon }},
+          {% endif %}
+          'items': [
+            {% for product in order.products %}{
+              'item_id'      : '{{product.id}}',
+              'id'           : '{{product.id}}',
+              'item_variant' : '{{product.variant.id}}',              
+              'item_name'    : '{{product.title}}',
+              'price'        : {{product.price}},
+              'quantity'     : {{product.quantity}},
+              'item_brand'   : '{{product.brand}}',
+              'item_category': '{{product.category}}',
+              'item_size'    : '{{product.size}}',
+              'discount'     : {{product.discount}},
+              'google_business_vertical': 'retail'
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        };
+
+        window.dataLayer.push({
+          'event': 'add_payment_info',
+          'ecommerce': ecommerce
+        });
+     }
+
+     /**********************
+     * Event: purchase.
+     * Description: Signifies that one or more items were purchased by a user.
+     * Type: Recommended GA4 event.
+     * Tigger: On succesful purchase confirmation page load, first load only.
+     * Remark: If it is not possible to trigger only on first load, we can correct this with GTM/GA4.
+     ***********************/
+
+     if(page == 'thankyou'){
+        var ecommerce = {
+          'transaction_id': '{{order.id}}',
+          'value': {{order.value}},
+          'tax': {{order.tax}},
+          'shipping': {{order.shipping_price}},
+          'currency': '{{shop.currency.iso_code}}',
+          {% if order.coupon %}
+          'coupon': {{ order.coupon }},
+          {% endif %}
+          'items': [
+             {% for product in order.products %}{
+                'item_id'      : '{{product.id}}',
+                'id'           : '{{product.id}}',
+                'item_variant' : '{{product.variant.id}}',             
+                'item_name'    : '{{product.title}}',
+                'price'        : {{product.price}},
+                'quantity'     : {{product.quantity}},
+                'item_brand'   : '{{product.brand}}',
+                'item_category': '{{product.category}}',
+                'item_size'    : '{{product.size}}',
+                'discount'     : {{product.discount}},
+                'google_business_vertical': 'retail'
+             }{% if not loop.last %},{% endif %}
+             {% endfor %}
+          ],
+          item_ids: [
+            {% for product in order.products %}
+            '{{product.id}}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ],
+          item_names: [
+            {% for product in order.products %}
+            '{{product.title}}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        };
+
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     var user_data = {
+          "address": {
+            "first_name"  : "{{ order.customer.firstname }}",   // Required.
+            "last_name"   : "{{ order.customer.lastname }}",    // Required.
+            "street"     : "{{ order.billing.streetname }}",  // Optional. Name and number.
+            "city"       : "{{ order.billing.city }}",	  // Optional.
+            "region"     : "{{ order.billing.region }}",	  // Optional. Province, state, or region.
+            "postal_code": "{{ order.billing.zipcode }}",	  // Required. No spaces.
+            "country"    : "{{ order.billing.country_code }}", // Required. ISO 3166-1 alpha-2.
+          }
+    "total_orders"    : "{{ user.order_count }}",      // Optional.
+            "total_spend"    : "{{ user.total_spend }}"       // Optional.
+        };
+
+        // For extra privacy considerations you can hash email and phone number using hex SHA256.
+        // Otherwise Google will normalize and hash before the data reaches the servers.
+        // When you hash a phone number, make sure it follows the formatting as outlined below.
+        {% if order.customer.email %}
+          user_data.email_address = "{{ order.customer.email }}"; // Preferred.
+        {% endif %}
+
+        {% if order.customer.phone %}
+          // In E.164 format, which means it must be 11 to 15 digits
+          // This includes a plus sign (+) and prefix country code 
+          // Remove all dashes, parentheses, and spaces (important).
+          user_data.phone_number = "{{ order.customer.phone }}"; // Optional.
+        {% endif %}
+
+        window.dataLayer.push({
+          'event': 'purchase',
+          'ecommerce': ecommerce,
+          'user_data': user_data
+        });
+     }
+  }
+  </script>
+ </head>
+ <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+  </body>
+</html>
